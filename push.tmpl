@@ -1,33 +1,38 @@
 [% IF isSubject %]
-    [% PERL %]
-        my $headCommit = $stash->get('head_commit') // {};
-        my $repo       = $stash->get('repository') // {};
-        my $logmsg     = $head_Commit->{message} // '';
-        $logmsg        =~ s/\n{1,}/; /gm;
+[% PERL %]
+    my $headCommit = $stash->get('head_commit') // {};
+    my $repo       = $stash->get('repository') // {};
+    my $logmsg     = $headCommit->{message} // '';
+    $logmsg        =~ s/\n{1,}/; /gm;
 
-        if (length($logmsg) > 54) {
-            $logmsg =~ s/^(.{51}).+/$1.../;
-        }
+    if (length($logmsg) > 54) {
+        $logmsg =~ s/^(.{51}).+/$1.../;
+    }
 
-        print join(' ',
-            'GitHub -',
-            '['  . ($repo->{full_name} // '') . ']',
-            substr($headCommit->{id} // '', 0, 6)  . ':',
-            $logmsg
-        );
-    [% END %]
-[% ELSE %] # body
+    print join(' ',
+        'GitHub - push -',
+        '['  . ($repo->{full_name} // '') . ']',
+        substr($headCommit->{id} // '', 0, 6)  . ':',
+        $logmsg
+    );
+[% END %]
+[% ELSE %]
 Branch: [% ref %]
-Home:   [% url %]
+
+Home:   [% repository.url %]
 
 
-[% FOREACH commit IN commits %]
-Commit: [% commit.id %]
-        [% commit.url %]
-Author: [% commit.author.name %], [% commit.author.email %]
+
+[% FOREACH thisCommit IN commits -%]
+Commit: [% thisCommit.id %]
+
+        [% thisCommit.url %]
+
+Author: [% thisCommit.author.name %], [% thisCommit.author.email %]
+
 Date:   [% TRY %]
-    [% PERL %]
-        my $ds = $stash->get('commit')->{timestamp} // '';
+[% PERL %]
+        my $ds = $stash->get('thisCommit')->{timestamp} // '';
         $ds    =~ s/T(\d{1,2}:\d{1,2}:\d{1,2}).+$/ $1/;
 
         $ds = Time::Piece
@@ -35,34 +40,32 @@ Date:   [% TRY %]
             ->strftime('%A, %Y-%m-%d %T');
 
         print $ds;
-    [% END %]
+[% END %]
 [% CATCH %]
     [% commit.timestamp %] ([% error.info %])
 [% END %]
 
+
 Changed paths:
-[% FOREACH changetype IN [
-    {
-        changes => commit.added,
-        type    => 'A',
-    },
-    {
-        changes => commit.modified,
-        type    => 'M',
-    },
-    {
-        changes => commit.removed },
-        type    => 'D',
-    },
-] %]
-    [% FOREACH path IN changetype.changes %]
-  [% changetype.type %] [% path %]
-    [ % END %]
-[ % END %]
+[% FOREACH thisAdd IN thisCommit.added -%]
+A [% thisAdd %]
+
+[% END %]
+[% FOREACH thisMod IN thisCommit.modified -%]
+M [% thisMod %]
+
+[% END %]
+[% FOREACH thisDel IN thisCommit.removed -%]
+D [% thisDel %]
+
+[% END %]
+
 
 Log Messages:
 ------------
-[% commit.message %]
+[% thisCommit.message %]
+
+[% END %]
 
 
 Compare: [% compare %]
