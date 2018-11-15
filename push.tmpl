@@ -2,6 +2,15 @@
 [% PERL %]
     my $headCommit = $stash->get('head_commit') // {};
     my $repo       = $stash->get('repository') // {};
+
+    unless (ref($headCommit) eq 'HASH') {
+        $headCommit = {};
+    }
+    
+    unless (ref($repo) eq 'HASH') {
+        $repo = {};
+    }
+
     my $logmsg     = $headCommit->{message} // '';
     $logmsg        =~ s/\n{1,}/; /gm;
 
